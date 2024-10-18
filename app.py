@@ -29,8 +29,8 @@ def read_financials(stock_symbol):
             try:
                 # Read IncomeStatement sheet
                 data = pd.read_excel(file_path, sheet_name='IncomeStatement')
-                
-                # Ensure the DataFrame has the expected structure
+
+                # Check if the stock symbol is in the data
                 if 'Stock Symbol' in data.columns and stock_symbol in data['Stock Symbol'].values:
                     # Filter for the relevant stock
                     stock_data = data[data['Stock Symbol'] == stock_symbol]
@@ -44,7 +44,6 @@ def read_financials(stock_symbol):
 
     # Drop empty columns before returning
     financial_data = financial_data.dropna(axis=1, how='all')
-
     return financial_data
 
 # Function to fetch details for a specific stock based on the event type

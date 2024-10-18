@@ -76,19 +76,16 @@ def interpret_income_data(details):
 def generate_projections(event_details, income_details, expected_event_rate, event_type):
     latest_event_value = income_details['Latest Event Value']
     event_change = expected_event_rate - latest_event_value
-    
+
     # Create a DataFrame to store the results
     projections = pd.DataFrame(columns=['Parameter', 'Current Value', 'Projected Value', 'Change'])
-
-    # Check available columns in event details
-    st.write("Available parameters in event details:", event_details.index)
 
     # Check if 'Latest Close Price' exists
     if 'Latest Close Price' in event_details.index:
         latest_close_price = pd.to_numeric(event_details['Latest Close Price'], errors='coerce')
         price_change = event_details['Event Coefficient'] * event_change
         projected_price = latest_close_price + price_change
-        
+
         new_row = pd.DataFrame([{
             'Parameter': 'Projected Stock Price',
             'Current Value': latest_close_price,
@@ -100,18 +97,17 @@ def generate_projections(event_details, income_details, expected_event_rate, eve
         st.warning("Stock Price data not available in event details.")
 
     # Project changes in income statement items
+    st.write("### Projected Changes in Income Statement Items")
     for column in income_details.index:
         if column != 'Stock Name':
             current_value = pd.to_numeric(income_details[column], errors='coerce')
             if pd.notna(current_value):
-                if column in event_details.index:
-                    correlation_factor = event_details[column] if column in event_details.index else 0
-                    projected_value = current_value + (current_value * correlation_factor * event_change / 100)
-                else:
-                    projected_value = current_value * (1 + event_change / 100)  # Simplified assumption
-                
+                # Assuming a correlation effect from inflation or interest rate on income items
+                correlation_factor = event_details.get(column, 0)  # Default to 0 if not found
+                projected_value = current_value * (1 + (correlation_factor * event_change / 100))
+
                 change = projected_value - current_value
-                
+
                 new_row = pd.DataFrame([{
                     'Parameter': column,
                     'Current Value': current_value,

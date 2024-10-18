@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+import os
 
 # Load the data from Excel files
 inflation_data = pd.read_excel('Inflation_event_stock_analysis_resultsOct.xlsx')
@@ -15,6 +16,23 @@ st.sidebar.header('Search for a Stock')
 event_type = st.sidebar.selectbox('Select Event Type:', ['Inflation', 'Interest Rate'])
 stock_name = st.sidebar.text_input('Enter Stock Symbol:', '')
 expected_event_rate = st.sidebar.number_input('Enter Expected Upcoming Rate (%):', value=3.65, step=0.01)
+
+# Function to fetch income statement data from the financials folder
+def fetch_income_statement(stock_symbol):
+    folder_path = 'financials'
+    for filename in os.listdir(folder_path):
+        if filename.endswith('.xlsx'):
+            file_path = os.path.join(folder_path, filename)
+            # Read the Income Statement sheet
+            try:
+                income_statement = pd.read_excel(file_path, sheet_name='IncomeStatement')
+                if stock_symbol in income_statement['Stock Symbol'].values:
+                    # Filter for the specific stock
+                    stock_data = income_statement[income_statement['Stock Symbol'] == stock_symbol]
+                    return stock_data
+            except Exception as e:
+                st.warning(f"Error reading {filename}: {e}")
+    return None
 
 # Function to fetch details for a specific stock based on the event type
 def get_stock_details(stock_symbol, event_type):
@@ -39,8 +57,14 @@ def get_stock_details(stock_symbol, event_type):
         st.write("### Income Statement Data")
         st.write(income_row)
 
-        # Generate projections based on expected event rate
-        generate_projections(event_details, income_details, expected_event_rate, event_type)
+        # Fetch additional income statement data from the financials folder
+        additional_income_data = fetch_income_statement(stock_symbol)
+        if additional_income_data is not None:
+            st.write("### Additional Income Statement Data")
+            st.write(additional_income_data)
+
+            # Project values based on expected event rate
+            generate_projections(event_details, income_details, expected_event_rate, event_type, additional_income_data)
         
         # Interpret event and income data
         interpret_event_data(event_details, event_type)
@@ -48,32 +72,8 @@ def get_stock_details(stock_symbol, event_type):
     else:
         st.warning('Stock symbol not found in the data.')
 
-# Function to interpret event data
-def interpret_event_data(details, event_type):
-    st.write("### Interpretation of Event Data")
-    if event_type == 'Inflation':
-        if details['Event Coefficient'] < -1:
-            st.write("**1% Increase in Inflation:** Stock price decreases significantly. Increase portfolio risk.")
-        elif details['Event Coefficient'] > 1:
-            st.write("**1% Increase in Inflation:** Stock price increases, benefiting from inflation.")
-    else:  # Interest Rate
-        if details['Event Coefficient'] < -1:
-            st.write("**1% Increase in Interest Rate:** Stock price decreases significantly. Increase portfolio risk.")
-        elif details['Event Coefficient'] > 1:
-            st.write("**1% Increase in Interest Rate:** Stock price increases, benefiting from interest hikes.")
-
-# Function to interpret income data
-def interpret_income_data(details):
-    st.write("### Interpretation of Income Statement Data")
-    if 'Average Operating Margin' in details.index:
-        average_operating_margin = details['Average Operating Margin']
-        if average_operating_margin > 0.2:
-            st.write("**High Operating Margin:** Indicates strong management effectiveness.")
-        elif average_operating_margin < 0.1:
-            st.write("**Low Operating Margin:** Reflects risk in profitability.")
-
 # Function to generate projections based on expected event rate
-def generate_projections(event_details, income_details, expected_event_rate, event_type):
+def generate_projections(event_details, income_details, expected_event_rate, event_type, additional_income_data):
     latest_event_value = income_details['Latest Event Value']
     event_change = expected_event_rate - latest_event_value
     
@@ -99,17 +99,12 @@ def generate_projections(event_details, income_details, expected_event_rate, eve
     else:
         st.warning("Stock Price data not available in event details.")
 
-    # Project changes in income statement items
-    for column in income_details.index:
-        if column != 'Stock Name':
-            current_value = pd.to_numeric(income_details[column], errors='coerce')
+    # Project changes in additional income statement items
+    for column in additional_income_data.columns:
+        if column not in ['Date', 'Stock Symbol']:
+            current_value = pd.to_numeric(additional_income_data[column].iloc[-1], errors='coerce')  # Get the last entry
             if pd.notna(current_value):
-                if column in event_details.index:
-                    correlation_factor = event_details[column] if column in event_details.index else 0
-                    projected_value = current_value + (current_value * correlation_factor * event_change / 100)
-                else:
-                    projected_value = current_value * (1 + event_change / 100)  # Simplified assumption
-                
+                projected_value = current_value * (1 + event_change / 100)  # Simplified assumption for projection
                 change = projected_value - current_value
                 
                 new_row = pd.DataFrame([{
@@ -119,8 +114,6 @@ def generate_projections(event_details, income_details, expected_event_rate, eve
                     'Change': change
                 }])
                 projections = pd.concat([projections, new_row], ignore_index=True)
-            else:
-                st.warning(f"Could not convert current value for {column} to numeric.")
 
     # Display the projections table
     st.write("### Projected Changes Based on Expected Event")

@@ -3,7 +3,7 @@ import streamlit as st
 import os
 
 # Set up Streamlit app
-st.title('Stock Analysis Based on Economic Events')
+st.title('Stock Analysis Based on Income Statement Data')
 
 # Create a sidebar for user input
 st.sidebar.header('Search for a Stock')

@@ -66,7 +66,7 @@ def get_stock_details(stock_symbol, event_type):
         financials = read_financials(stock_symbol)
         if not financials.empty:
             st.write("### Full Income Statement")
-            st.dataframe(financials)
+            st.dataframe(financials.drop(columns='Stock Symbol', errors='ignore'))  # Exclude Stock Symbol column for display
         else:
             st.warning('No financial data found for the selected stock.')
 

@@ -29,13 +29,21 @@ def read_financials(stock_symbol):
             try:
                 # Read IncomeStatement sheet
                 data = pd.read_excel(file_path, sheet_name='IncomeStatement')
-                # Check if the stock symbol is in the data
+                
+                # Ensure the DataFrame has the expected structure
                 if 'Stock Symbol' in data.columns and stock_symbol in data['Stock Symbol'].values:
                     # Filter for the relevant stock
                     stock_data = data[data['Stock Symbol'] == stock_symbol]
-                    financial_data = pd.concat([financial_data, stock_data], ignore_index=True)
+
+                    # Only append non-empty DataFrames
+                    if not stock_data.empty:
+                        financial_data = pd.concat([financial_data, stock_data], ignore_index=True)
+
             except Exception as e:
                 st.warning(f"Could not read {filename}: {e}")
+
+    # Drop empty columns before returning
+    financial_data = financial_data.dropna(axis=1, how='all')
 
     return financial_data
 

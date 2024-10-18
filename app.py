@@ -13,12 +13,11 @@ st.title('Stock Analysis Based on Economic Events')
 # Create a sidebar for user input
 st.sidebar.header('Search for a Stock')
 event_type = st.sidebar.selectbox('Select Event Type:', ['Inflation', 'Interest Rate'])
-rate_type = st.sidebar.selectbox('Select Rate Type:', ['Inflation Rate', 'Interest Rate'])
 stock_name = st.sidebar.text_input('Enter Stock Symbol:', '')
 expected_event_rate = st.sidebar.number_input('Enter Expected Upcoming Rate (%):', value=3.65, step=0.01)
 
-# Function to fetch details for a specific stock based on the event and rate type
-def get_stock_details(stock_symbol, event_type, rate_type):
+# Function to fetch details for a specific stock based on the event type
+def get_stock_details(stock_symbol, event_type):
     if event_type == 'Inflation':
         event_row = inflation_data[inflation_data['Symbol'] == stock_symbol]
         income_row = income_data[income_data['Stock Name'] == stock_symbol]
@@ -129,4 +128,4 @@ def generate_projections(event_details, income_details, expected_event_rate, eve
 
 # Check if user has entered a stock symbol
 if stock_name:
-    get_stock_details(stock_name, event_type, rate_type)
+    get_stock_details(stock_name, event_type)

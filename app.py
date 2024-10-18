@@ -65,9 +65,15 @@ def get_stock_details(stock_symbol, event_type):
             # Generate projections based on expected event rate
             generate_projections(event_details, income_details, expected_event_rate, event_type, additional_income_data)
         
-        # Interpret event and income data
-        interpret_event_data(event_details, event_type)
-        interpret_income_data(income_details)
+            # Interpret event and income data
+            if 'Event Coefficient' in event_details.index:  # Check if the column exists
+                interpret_event_data(event_details, event_type)
+            else:
+                st.warning('Event Coefficient not found in event data.')
+            
+            interpret_income_data(income_details)
+        else:
+            st.warning('Additional income statement data not found.')
     else:
         st.warning('Stock symbol not found in the data.')
 
@@ -75,14 +81,14 @@ def get_stock_details(stock_symbol, event_type):
 def interpret_event_data(details, event_type):
     st.write("### Interpretation of Event Data")
     if event_type == 'Inflation':
-        if details['Event Coefficient'] < -1:
+        if details.get('Event Coefficient', 0) < -1:  # Use .get to avoid KeyError
             st.write("**1% Increase in Inflation:** Stock price decreases significantly. Increase portfolio risk.")
-        elif details['Event Coefficient'] > 1:
+        elif details.get('Event Coefficient', 0) > 1:
             st.write("**1% Increase in Inflation:** Stock price increases, benefiting from inflation.")
     else:  # Interest Rate
-        if details['Event Coefficient'] < -1:
+        if details.get('Event Coefficient', 0) < -1:
             st.write("**1% Increase in Interest Rate:** Stock price decreases significantly. Increase portfolio risk.")
-        elif details['Event Coefficient'] > 1:
+        elif details.get('Event Coefficient', 0) > 1:
             st.write("**1% Increase in Interest Rate:** Stock price increases, benefiting from interest hikes.")
 
 # Function to interpret income data

@@ -30,7 +30,7 @@ def read_financials(stock_symbol):
                 # Read IncomeStatement sheet
                 data = pd.read_excel(file_path, sheet_name='IncomeStatement')
                 # Check if the stock symbol is in the data
-                if stock_symbol in data['Stock Symbol'].values:
+                if 'Stock Symbol' in data.columns and stock_symbol in data['Stock Symbol'].values:
                     # Filter for the relevant stock
                     stock_data = data[data['Stock Symbol'] == stock_symbol]
                     financial_data = pd.concat([financial_data, stock_data], ignore_index=True)

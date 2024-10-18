@@ -1,6 +1,5 @@
 import pandas as pd
 import streamlit as st
-import os
 
 # Load the data from Excel files
 inflation_data = pd.read_excel('Inflation_event_stock_analysis_resultsOct.xlsx')
@@ -16,28 +15,6 @@ st.sidebar.header('Search for a Stock')
 event_type = st.sidebar.selectbox('Select Event Type:', ['Inflation', 'Interest Rate'])
 stock_name = st.sidebar.text_input('Enter Stock Symbol:', '')
 expected_event_rate = st.sidebar.number_input('Enter Expected Upcoming Rate (%):', value=3.65, step=0.01)
-
-# Function to read Income Statement data from financials folder
-def read_financials(stock_symbol):
-    financials_folder = 'financials'
-    financial_data = pd.DataFrame()
-
-    # Iterate through all Excel files in the folder
-    for filename in os.listdir(financials_folder):
-        if filename.endswith('.xlsx'):
-            file_path = os.path.join(financials_folder, filename)
-            try:
-                # Read IncomeStatement sheet
-                data = pd.read_excel(file_path, sheet_name='IncomeStatement')
-                # Check if the stock symbol is in the data
-                if 'Stock Symbol' in data.columns and stock_symbol in data['Stock Symbol'].values:
-                    # Filter for the relevant stock
-                    stock_data = data[data['Stock Symbol'] == stock_symbol]
-                    financial_data = pd.concat([financial_data, stock_data], ignore_index=True)
-            except Exception as e:
-                st.warning(f"Could not read {filename}: {e}")
-
-    return financial_data
 
 # Function to fetch details for a specific stock based on the event type
 def get_stock_details(stock_symbol, event_type):
@@ -61,14 +38,6 @@ def get_stock_details(stock_symbol, event_type):
         # Display income statement data
         st.write("### Income Statement Data")
         st.write(income_row)
-
-        # Read and display financials from the financials folder
-        financials = read_financials(stock_symbol)
-        if not financials.empty:
-            st.write("### Full Income Statement")
-            st.dataframe(financials)
-        else:
-            st.warning('No financial data found for the selected stock.')
 
         # Generate projections based on expected event rate
         generate_projections(event_details, income_details, expected_event_rate, event_type)

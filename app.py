@@ -42,8 +42,12 @@ def get_stock_details(stock_symbol, event_type):
         st.write(income_row)
 
         # Generate projections based on expected rate
-        generate_projections(event_details, income_details, expected_rate, event_type)
+        projections = generate_projections(event_details, income_details, expected_rate, event_type)
         
+        # Display projections
+        st.write(f"### Projected Changes Based on Expected {event_type}")
+        st.dataframe(projections)
+
         # Additional interpretations based on conditions
         if event_type == 'Inflation':
             interpret_inflation_data(event_details)
@@ -129,9 +133,7 @@ def generate_projections(event_details, income_details, expected_rate, event_typ
             else:
                 st.warning(f"Could not convert current value for {column} to numeric.")
 
-    # Display the projections table
-    st.write("### Projected Changes Based on Expected Rate")
-    st.dataframe(projections)
+    return projections
 
 # Check if user has entered a stock symbol
 if stock_name:

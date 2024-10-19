@@ -91,9 +91,6 @@ def generate_projections(event_details, income_details, expected_rate, event_typ
     # Create a DataFrame to store the results
     projections = pd.DataFrame(columns=['Parameter', 'Current Value', 'Projected Value', 'Change'])
 
-    # Check available columns in event details
-    st.write("Available parameters in event details:", event_details.index)
-
     # Check if 'Latest Close Price' exists
     if 'Latest Close Price' in event_details.index:
         latest_close_price = pd.to_numeric(event_details['Latest Close Price'], errors='coerce')

@@ -74,8 +74,17 @@ def interpret_income_data(details):
 
 # Function to generate projections based on expected event rate
 def generate_projections(event_details, income_details, expected_event_rate, event_type):
-    latest_event_value = income_details['Latest Event Value']
+    # Check if 'Latest Event Value' exists
+    if 'Latest Event Value' not in income_details.index:
+        st.warning("Latest Event Value not found in income details.")
+        return
+
+    latest_event_value = pd.to_numeric(income_details['Latest Event Value'], errors='coerce')
+    expected_event_rate = float(expected_event_rate)
+
+    # Calculate event change
     event_change = expected_event_rate - latest_event_value
+    st.write(f"Event Change: {event_change}")  # Debugging line
 
     # Create a DataFrame to store the results
     projections = pd.DataFrame(columns=['Parameter', 'Current Value', 'Projected Value', 'Change'])
@@ -93,8 +102,6 @@ def generate_projections(event_details, income_details, expected_event_rate, eve
             'Change': price_change
         }])
         projections = pd.concat([projections, new_row], ignore_index=True)
-    else:
-        st.warning("Stock Price data not available in event details.")
 
     # Project changes in income statement items
     st.write("### Projected Changes in Income Statement Items")
@@ -102,10 +109,9 @@ def generate_projections(event_details, income_details, expected_event_rate, eve
         if column != 'Stock Name':
             current_value = pd.to_numeric(income_details[column], errors='coerce')
             if pd.notna(current_value):
-                # Assuming a correlation effect from inflation or interest rate on income items
+                # Get the correlation factor
                 correlation_factor = event_details.get(column, 0)  # Default to 0 if not found
                 projected_value = current_value * (1 + (correlation_factor * event_change / 100))
-
                 change = projected_value - current_value
 
                 new_row = pd.DataFrame([{

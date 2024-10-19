@@ -55,7 +55,7 @@ def get_stock_details(stock_symbol, event_type):
             interpret_interest_rate_data(event_details)
         interpret_income_data(income_details)
     else:
-        st.warning('Stock symbol not found in the data.')
+        st.warning('Stock symbol not found in the data. Please check the symbol and try again.')
 
 # Function to interpret inflation data
 def interpret_inflation_data(details):
@@ -132,6 +132,6 @@ def generate_projections(event_details, income_details, expected_rate, event_typ
 
     return projections
 
-# Check if user has entered a stock symbol
-if stock_name:
+# Check if user has entered a stock symbol and selected an event
+if stock_name and event_type:
     get_stock_details(stock_name, event_type)
